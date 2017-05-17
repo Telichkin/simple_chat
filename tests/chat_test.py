@@ -53,17 +53,17 @@ class SocketIOTest(BaseTestCase):
         assert all([response["author"] == self.user_data_list[0]["username"] for response in response_list])
 
         # Get all active users
-        self.client_list[1].emit("subscribe active users")
-        response = self.client_list[1].get_received()[0]["args"][0]
+        self.client_list[1].connect(namespace="/active-users")
+        response = self.client_list[1].get_received("/active-users")[0]["args"]
         assert sorted(response) == sorted([user["username"] for user in self.user_data_list])
 
         # Notify subscribers if someone disconnect
         self.client_list[0].disconnect()
-        response = self.client_list[1].get_received()[0]["args"][0]
+        response = self.client_list[1].get_received("/active-users")[0]["args"]
         assert sorted(response) == sorted([user["username"] for user in self.user_data_list[1:]])
 
         # Notify subscribers if someone connect
         self.client_list[0].connect()
         self.client_list[0].emit("auth", {"token": self.token_list[0]})
-        response = self.client_list[1].get_received()[0]["args"][0]
+        response = self.client_list[1].get_received("/active-users")[0]["args"]
         assert sorted(response) == sorted([user["username"] for user in self.user_data_list])

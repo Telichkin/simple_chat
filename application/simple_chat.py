@@ -1,29 +1,32 @@
 from flask_socketio import send, emit
-from flask_jwt_extended import tokens
-from flask_jwt_extended.config import config
-from jwt.exceptions import DecodeError
 
 from application import socket_io, active_users
+from application.utils import get_username_from_token
+from application.decorators import user_should_be_active
+from application.events import IncomingEvents, OutgoingEvents
 
 
-def get_username_from_token(token):
-    try:
-        username = tokens.decode_jwt(token, config.decode_key, config.algorithm, csrf=False)["identity"]
-    except DecodeError:
-        username = None
-    return username
+def send_message(message, to_user):
+    emit(OutgoingEvents.SEND_MESSAGE, message, room=to_user.sid)
 
 
-subscribers = set()
+def broadcast_message(message):
+    emit(OutgoingEvents.SEND_MESSAGE, message, broadcast=True)
 
 
-@socket_io.on("auth")
-def auth_chat(json):
-    if "token" not in json:
+def notify_subscribers():
+    active_username_list = [user.username for user in active_users.get_all()]
+    send(active_username_list, broadcast=True, namespace="/active-users")
+
+
+@socket_io.on(IncomingEvents.AUTH)
+def on_user_auth(json):
+    token = json.get("token", None)
+    if not token:
         send("Token is needed")
         return
 
-    username = get_username_from_token(json["token"])
+    username = get_username_from_token(token)
     if not username:
         send("authentication error")
     else:
@@ -32,52 +35,33 @@ def auth_chat(json):
         notify_subscribers()
 
 
-@socket_io.on("send message")
-def send_message(json):
-    sender = active_users.get_current_user()
-    if not sender:
-        return
-
+@socket_io.on(IncomingEvents.SEND_MESSAGE)
+@user_should_be_active
+def on_send_message(current_user, json):
     to_username = json.get("to", None)
     text = json.get("message", None)
     if not to_username or not text:
         return
 
-    message = {"message": text, "author": sender.username}
+    message = {"message": text, "author": current_user.username}
     if to_username == "all":
-        emit("send message", message, broadcast=True)
+        broadcast_message(message)
     else:
         receiver = active_users.get_user_by_username(to_username)
         if receiver:
-            emit("send message", message, room=receiver.sid)
-            emit("send message", message, room=sender.sid)
+            send_message(message, to_user=receiver)
+            send_message(message, to_user=current_user)
 
 
-@socket_io.on("subscribe active users")
-def subscribe_for_active_users():
-    subscriber = active_users.get_current_user()
-    if not subscriber:
-        return
-
-    subscribers.add(subscriber)
-    active_username_list = [user.username for user in active_users.get_all()]
-    emit("active users", active_username_list)
-
-
-@socket_io.on("disconnect")
-def disconnect():
-    active_user = active_users.get_current_user()
-    if not active_users:
-        return
-
-    if active_user in subscribers:
-        subscribers.remove(active_user)
-
+@socket_io.on(IncomingEvents.DISCONNECT)
+@user_should_be_active
+def on_disconnect(current_user):
     active_users.remove_current_user()
     notify_subscribers()
 
 
-def notify_subscribers():
+@socket_io.on(IncomingEvents.CONNECT, namespace="/active-users")
+@user_should_be_active
+def on_subscribe_for_active_users(current_user):
     active_username_list = [user.username for user in active_users.get_all()]
-    for subscriber in subscribers:
-        emit("active users", active_username_list, room=subscriber.sid)
+    send(active_username_list, namespace="/active-users")
