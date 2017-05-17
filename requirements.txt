@@ -3,6 +3,7 @@ click==6.7
 colorama==0.3.9
 Flask==0.12.2
 Flask-JWT-Extended==2.0.0
+Flask-SocketIO==2.8.6
 Flask-SQLAlchemy==2.2
 Flask-Testing==0.6.2
 itsdangerous==0.24
@@ -13,6 +14,8 @@ py==1.4.33
 PyJWT==1.4.2
 pyparsing==2.2.0
 pytest==3.0.7
+python-engineio==1.5.2
+python-socketio==1.7.4
 simplekv==0.10.0
 six==1.10.0
 SQLAlchemy==1.1.9

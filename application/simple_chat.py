@@ -1,7 +1,8 @@
+from flask_socketio import send
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token
 
-from application import db
+from application import db, socket_io
 from application.models import User
 
 
@@ -46,3 +47,8 @@ def token_auth():
         return jsonify({"error": "Incorrect username or password"}), 400
 
     return jsonify({"token": create_access_token(identity=username)}), 200
+
+
+@socket_io.on("connect")
+def connect_global_chat():
+    send("Connected!")
