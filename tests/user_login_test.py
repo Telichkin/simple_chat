@@ -6,15 +6,15 @@ from application.models import User
 class UserLoginPositive(BaseTestCase):
     def setUp(self):
         super().setUp()
-        self.uri = "/auth/"
-        self.username = "Test"
-        self.password = "Test"
-        user = User(username=self.username,
-                    password=self.password)
+        uri = "/auth/"
+        username = "Test"
+        password = "Test"
+        user = User(username=username,
+                    password=password)
         db.session.add(user)
         db.session.commit()
+        self.response = self.json_post(uri, {"username": username,
+                                             "password": password})
 
     def test_should_return_200(self):
-        response = self.json_post(self.uri, {"username": self.username,
-                                             "password": self.password})
-        assert response.status_code == 200
+        assert self.response.status_code == 200
