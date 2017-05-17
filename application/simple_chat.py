@@ -1,4 +1,4 @@
-from flask_socketio import send
+from flask_socketio import send, emit
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, tokens
 from flask_jwt_extended.config import config
@@ -70,3 +70,11 @@ def auth_global_chat(json):
         send("authentication error")
     else:
         send("authenticated")
+
+
+@socket_io.on("send message")
+def send_message(json):
+    to = json.get("to", None)
+    message = json.get("message", None)
+
+    emit("send message", {"message": message}, broadcast=True)

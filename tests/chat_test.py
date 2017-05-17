@@ -13,6 +13,7 @@ class AuthBase(BaseTestCase):
         self.client_list = [socket_io.test_client(self.app) for _ in self.user_data_list]
         self.token_list = [self.json_post("/users/", user_data).json["token"]
                            for user_data in self.user_data_list]
+        self.message = "What's up?!"
 
     # SocketTO().test_client works incorrectly, it can't receive messages when more than 1
     # tests with it is written.
@@ -28,3 +29,10 @@ class AuthBase(BaseTestCase):
 
         self.client_list[0].emit("auth", {})
         assert self.client_list[0].get_received()[0]["args"] == "Token is needed"
+
+        # Broadcasting
+        self.client_list[1].send("auth", {"token": self.token_list[1]})
+        self.client_list[2].send("auth", {"token": self.token_list[2]})
+        self.client_list[0].emit("send message", {"to": "all", "message": self.message})
+        response_list = [client.get_received()[0]["args"][0]["message"] for client in self.client_list]
+        assert all([response == self.message for response in response_list])
