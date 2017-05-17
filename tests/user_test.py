@@ -17,6 +17,9 @@ class UserCreationPositiveTestCase(BaseTestCase):
     def test_should_create_user_in_db(self):
         assert User.query.filter_by(username=self.user_data["username"])
 
+    def test_should_return_token(self):
+        assert "token" in self.response.json
+
 
 class UserCreationNegativeTestCase(BaseTestCase):
     def setUp(self):

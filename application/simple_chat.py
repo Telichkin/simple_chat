@@ -1,4 +1,4 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, jsonify
 
 from application import db
 from application.models import User
@@ -22,4 +22,4 @@ def create_user():
     user = User(username, password)
     db.session.add(user)
     db.session.commit()
-    return "OK", 201
+    return jsonify({"token": ""}), 201
