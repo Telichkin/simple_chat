@@ -83,5 +83,13 @@ def send_message(json):
 
     to = json.get("to", None)
     message = json.get("message", None)
+    if not to or not message:
+        return
 
-    emit("send message", {"message": message}, broadcast=True)
+    if to == "all":
+        emit("send message", {"message": message}, broadcast=True)
+    else:
+        private_room = active_users.get(to, None)
+        if private_room:
+            emit("send message", {"message": message}, room=private_room)
+            emit("send message", {"message": message}, room=request.sid)
