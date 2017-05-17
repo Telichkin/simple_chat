@@ -1,18 +1,12 @@
 import json
 
-from flask_testing import TestCase
-
-import config
-import application
+from .utils import BaseTestCase
 from application.models import User
 
 
-class UserCreationPositiveTestCase(TestCase):
-    def create_app(self):
-        return application.create(config.TestingConfig)
-
+class UserCreationPositiveTestCase(BaseTestCase):
     def setUp(self):
-        application.db.create_all()
+        super().setUp()
         self.user_data = {
             "username": "Telichkin",
             "password": "SuperPWD!"
@@ -26,7 +20,3 @@ class UserCreationPositiveTestCase(TestCase):
 
     def test_should_create_user_in_db(self):
         assert User.query.filter_by(username=self.user_data["username"])
-
-    def tearDown(self):
-        application.db.session.remove()
-        application.db.drop_all()
