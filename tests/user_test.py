@@ -11,6 +11,7 @@ class UserCreationPositiveTestCase(TestCase):
         return application.create(config.TestingConfig)
 
     def setUp(self):
+        application.db.create_all()
         self.uri = "/users/"
         self.user_data = {
             "username": "Telichkin",
@@ -25,3 +26,6 @@ class UserCreationPositiveTestCase(TestCase):
         return self.client.post(self.uri,
                                 data=json.dumps(data),
                                 content_type="application/json")
+
+    def tearDown(self):
+        application.db.drop_all()
