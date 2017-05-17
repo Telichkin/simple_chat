@@ -27,3 +27,8 @@ def create_user():
     db.session.add(user)
     db.session.commit()
     return jsonify({"token": create_access_token(identity=username)}), 201
+
+
+@root.route("/auth/", methods=["POST"])
+def token_auth():
+    return "", 200
