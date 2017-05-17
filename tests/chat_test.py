@@ -2,7 +2,7 @@ from tests.utils import BaseTestCase
 from application import socket_io
 
 
-class AuthBase(BaseTestCase):
+class SocketTest(BaseTestCase):
     def setUp(self):
         super().setUp()
         self.user_data_list = [
@@ -17,7 +17,7 @@ class AuthBase(BaseTestCase):
 
     # SocketTO().test_client works incorrectly, it can't receive messages when more than 1
     # tests with it is written.
-    def test_auth(self):
+    def test_all_socket_functionality(self):
         self.client_list[0] = socket_io.test_client(self.app)
         self.client_list[0].get_received()
 
@@ -43,10 +43,27 @@ class AuthBase(BaseTestCase):
         self.client_list[0].emit("send message", {"to": "all", "message": self.message})
         response_list = [client.get_received()[0]["args"][0] for client in self.client_list]
         assert all([response["message"] == self.message for response in response_list])
-        # assert all([response["author"] == self.user_data_list[0]["username"] for response in response_list])
+        assert all([response["author"] == self.user_data_list[0]["username"] for response in response_list])
 
         # Private talk
         self.client_list[0].emit("send message", {"to": self.user_data_list[1]["username"],
                                                   "message": self.message})
         response_list = [client.get_received()[0]["args"][0] for client in self.client_list[:2]]
         assert all([response["message"] == self.message for response in response_list])
+        assert all([response["author"] == self.user_data_list[0]["username"] for response in response_list])
+
+        # Get all active users
+        self.client_list[1].emit("subscribe active users")
+        response = self.client_list[1].get_received()[0]["args"][0]
+        assert sorted(response) == sorted([user["username"] for user in self.user_data_list])
+
+        # Notify subscribers if someone disconnect
+        self.client_list[0].disconnect()
+        response = self.client_list[1].get_received()[0]["args"][0]
+        assert sorted(response) == sorted([user["username"] for user in self.user_data_list[1:]])
+
+        # Notify subscribers if someone connect
+        self.client_list[0].connect()
+        self.client_list[0].emit("auth", {"token": self.token_list[0]})
+        response = self.client_list[1].get_received()[0]["args"][0]
+        assert sorted(response) == sorted([user["username"] for user in self.user_data_list])

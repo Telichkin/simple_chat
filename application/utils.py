@@ -18,9 +18,12 @@ class ActiveUsers:
         self._sid_to_user[user.sid] = user
 
     def remove_current_user(self):
-        username = self._sid_to_user[request.sid]
+        user = self._sid_to_user[request.sid]
         del self._sid_to_user[request.sid]
-        del self._username_to_user[username]
+        del self._username_to_user[user.username]
+
+    def get_all(self):
+        return self._username_to_user.values()
 
     def get_current_user(self):
         return self._sid_to_user.get(request.sid, None)

@@ -59,8 +59,11 @@ def get_username_from_token(token):
     return username
 
 
+subscribers = set()
+
+
 @socket_io.on("auth")
-def auth_global_chat(json):
+def auth_chat(json):
     if "token" not in json:
         send("Token is needed")
         return
@@ -69,13 +72,15 @@ def auth_global_chat(json):
     if not username:
         send("authentication error")
     else:
-        send("authenticated")
         active_users.add(username)
+        send("authenticated")
+        notify_subscribers()
 
 
 @socket_io.on("send message")
 def send_message(json):
-    if not active_users.get_current_user():
+    sender = active_users.get_current_user()
+    if not sender:
         return
 
     to_username = json.get("to", None)
@@ -83,12 +88,41 @@ def send_message(json):
     if not to_username or not text:
         return
 
-    message = {"message": text}
+    message = {"message": text, "author": sender.username}
     if to_username == "all":
         emit("send message", message, broadcast=True)
     else:
         receiver = active_users.get_user_by_username(to_username)
-        sender = active_users.get_current_user()
         if receiver:
             emit("send message", message, room=receiver.sid)
             emit("send message", message, room=sender.sid)
+
+
+@socket_io.on("subscribe active users")
+def subscribe_for_active_users():
+    subscriber = active_users.get_current_user()
+    if not subscriber:
+        return
+
+    subscribers.add(subscriber)
+    active_username_list = [user.username for user in active_users.get_all()]
+    emit("active users", active_username_list)
+
+
+@socket_io.on("disconnect")
+def disconnect():
+    active_user = active_users.get_current_user()
+    if not active_users:
+        return
+
+    if active_user in subscribers:
+        subscribers.remove(active_user)
+
+    active_users.remove_current_user()
+    notify_subscribers()
+
+
+def notify_subscribers():
+    active_username_list = [user.username for user in active_users.get_all()]
+    for subscriber in subscribers:
+        emit("active users", active_username_list, room=subscriber.sid)
