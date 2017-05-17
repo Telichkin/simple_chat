@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import create_access_token
 
 from application import db
 from application.models import User
@@ -22,4 +23,4 @@ def create_user():
     user = User(username, password)
     db.session.add(user)
     db.session.commit()
-    return jsonify({"token": ""}), 201
+    return jsonify({"token": create_access_token(identity=username)}), 201

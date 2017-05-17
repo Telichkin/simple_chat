@@ -20,6 +20,9 @@ class UserCreationPositiveTestCase(BaseTestCase):
     def test_should_return_token(self):
         assert "token" in self.response.json
 
+    def test_should_return_token_with_data(self):
+        assert self.response.json["token"]
+
 
 class UserCreationNegativeTestCase(BaseTestCase):
     def setUp(self):
@@ -49,3 +52,10 @@ class UserCreationNegativeTestCase(BaseTestCase):
     def test_should_not_return_token_without_username(self):
         response = self.json_post(self.uri, data={"password": "myPWD"})
         assert "token" not in response.json
+
+    def test_should_return_different_tokens_for_different_users(self):
+        first_response = self.json_post(self.uri, data={"username": "First",
+                                                        "password": "First"})
+        second_response = self.json_post(self.uri, data={"username": "Second",
+                                                         "password": "Second"})
+        assert first_response.json["token"] != second_response.json["token"]
