@@ -16,3 +16,13 @@ class UserCreationPositiveTestCase(BaseTestCase):
 
     def test_should_create_user_in_db(self):
         assert User.query.filter_by(username=self.user_data["username"])
+
+
+class UserCreationNegativeTestCase(BaseTestCase):
+    def setUp(self):
+        super().setUp()
+        self.uri = "/users/"
+
+    def test_should_return_400_without_password(self):
+        response = self.json_post(self.uri, data={"username": "Cool!"})
+        assert response.status_code == 400
