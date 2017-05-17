@@ -10,11 +10,14 @@ root = Blueprint("root", __name__)
 @root.route("/users/", methods=["POST"])
 def create_user():
     user_data = request.get_json()
-    username = user_data.get("username", None)
-    password = user_data.get("password", None)
 
+    password = user_data.get("password", None)
     if not password:
         return "Password is needed", 400
+
+    username = user_data.get("username", None)
+    if not username:
+        return "Username is needed", 400
 
     user = User(username, password)
     db.session.add(user)
