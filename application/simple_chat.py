@@ -7,11 +7,6 @@ from application.models import User
 root = Blueprint("root", __name__)
 
 
-@root.route("/")
-def hello_world():
-    return "Hello World!"
-
-
 @root.route("/users/", methods=["POST"])
 def create_user():
     user_data = request.get_json()
