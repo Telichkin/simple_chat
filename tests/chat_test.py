@@ -1,5 +1,6 @@
 from tests.utils import BaseTestCase
 from application import socket_io
+from application.events import IncomingEvents
 
 
 class SocketIOTest(BaseTestCase):
@@ -21,33 +22,33 @@ class SocketIOTest(BaseTestCase):
         self.client_list[0] = socket_io.test_client(self.app)
         self.client_list[0].get_received()
 
-        self.client_list[0].emit("auth", {"token": self.token_list[0]})
+        self.client_list[0].emit(IncomingEvents.AUTH, {"token": self.token_list[0]})
         assert self.client_list[0].get_received()[0]["args"] == "authenticated"
 
-        self.client_list[0].emit("auth", {"token": self.token_list[0][:-3] + "qwe"})
+        self.client_list[0].emit(IncomingEvents.AUTH, {"token": self.token_list[0][:-3] + "qwe"})
         assert self.client_list[0].get_received()[0]["args"] == "authentication error"
 
-        self.client_list[0].emit("auth", {})
+        self.client_list[0].emit(IncomingEvents.AUTH, {})
         assert self.client_list[0].get_received()[0]["args"] == "Token is needed"
 
         # Not auth broadcasting
-        self.client_list[1].emit("send message", {"to": "all", "message": self.message})
+        self.client_list[1].emit(IncomingEvents.SEND_MESSAGE, {"to": "all", "message": self.message})
         response_list = [client.get_received() for client in self.client_list]
         assert all([len(response) == 0 for response in response_list])
 
         # Auth broadcasting
-        self.client_list[1].emit("auth", {"token": self.token_list[1]})
-        self.client_list[2].emit("auth", {"token": self.token_list[2]})
+        self.client_list[1].emit(IncomingEvents.AUTH, {"token": self.token_list[1]})
+        self.client_list[2].emit(IncomingEvents.AUTH, {"token": self.token_list[2]})
         self.client_list[1].get_received(), self.client_list[2].get_received()
 
-        self.client_list[0].emit("send message", {"to": "all", "message": self.message})
+        self.client_list[0].emit(IncomingEvents.SEND_MESSAGE, {"to": "all", "message": self.message})
         response_list = [client.get_received()[0]["args"][0] for client in self.client_list]
         assert all([response["message"] == self.message for response in response_list])
         assert all([response["author"] == self.user_data_list[0]["username"] for response in response_list])
 
         # Private talk
-        self.client_list[0].emit("send message", {"to": self.user_data_list[1]["username"],
-                                                  "message": self.message})
+        self.client_list[0].emit(IncomingEvents.SEND_MESSAGE, {"to": self.user_data_list[1]["username"],
+                                                               "message": self.message})
         response_list = [client.get_received()[0]["args"][0] for client in self.client_list[:2]]
         assert all([response["message"] == self.message for response in response_list])
         assert all([response["author"] == self.user_data_list[0]["username"] for response in response_list])
@@ -64,6 +65,6 @@ class SocketIOTest(BaseTestCase):
 
         # Notify subscribers if someone connect
         self.client_list[0].connect()
-        self.client_list[0].emit("auth", {"token": self.token_list[0]})
+        self.client_list[0].emit(IncomingEvents.AUTH, {"token": self.token_list[0]})
         response = self.client_list[1].get_received("/active-users")[0]["args"]
         assert sorted(response) == sorted([user["username"] for user in self.user_data_list])
