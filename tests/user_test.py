@@ -1,5 +1,3 @@
-import json
-
 from .utils import BaseTestCase
 from application.models import User
 
@@ -11,9 +9,7 @@ class UserCreationPositiveTestCase(BaseTestCase):
             "username": "Telichkin",
             "password": "SuperPWD!"
         }
-        self.response = self.client.post("/users/",
-                                         data=json.dumps(self.user_data),
-                                         content_type="application/json")
+        self.response = self.json_post("/users/", self.user_data)
 
     def test_should_return_201(self):
         assert self.response.status_code == 201
