@@ -41,11 +41,12 @@ class AuthBase(BaseTestCase):
         self.client_list[1].get_received(), self.client_list[2].get_received()
 
         self.client_list[0].emit("send message", {"to": "all", "message": self.message})
-        response_list = [client.get_received()[0]["args"][0]["message"] for client in self.client_list]
-        assert all([response == self.message for response in response_list])
+        response_list = [client.get_received()[0]["args"][0] for client in self.client_list]
+        assert all([response["message"] == self.message for response in response_list])
+        # assert all([response["author"] == self.user_data_list[0]["username"] for response in response_list])
 
         # Private talk
         self.client_list[0].emit("send message", {"to": self.user_data_list[1]["username"],
                                                   "message": self.message})
-        response_list = [client.get_received()[0]["args"][0]["message"] for client in self.client_list[:2]]
-        assert all([response == self.message for response in response_list])
+        response_list = [client.get_received()[0]["args"][0] for client in self.client_list[:2]]
+        assert all([response["message"] == self.message for response in response_list])

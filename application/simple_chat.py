@@ -4,7 +4,7 @@ from flask_jwt_extended import create_access_token, tokens
 from flask_jwt_extended.config import config
 from jwt.exceptions import DecodeError
 
-from application import db, socket_io
+from application import db, socket_io, active_users
 from application.models import User
 
 
@@ -59,9 +59,6 @@ def get_username_from_token(token):
     return username
 
 
-active_users = {}
-
-
 @socket_io.on("auth")
 def auth_global_chat(json):
     if "token" not in json:
@@ -73,23 +70,25 @@ def auth_global_chat(json):
         send("authentication error")
     else:
         send("authenticated")
-        active_users[username] = request.sid
+        active_users.add(username)
 
 
 @socket_io.on("send message")
 def send_message(json):
-    if request.sid not in active_users.values():
+    if not active_users.get_current_user():
         return
 
-    to = json.get("to", None)
-    message = json.get("message", None)
-    if not to or not message:
+    to_username = json.get("to", None)
+    text = json.get("message", None)
+    if not to_username or not text:
         return
 
-    if to == "all":
-        emit("send message", {"message": message}, broadcast=True)
+    message = {"message": text}
+    if to_username == "all":
+        emit("send message", message, broadcast=True)
     else:
-        private_room = active_users.get(to, None)
-        if private_room:
-            emit("send message", {"message": message}, room=private_room)
-            emit("send message", {"message": message}, room=request.sid)
+        receiver = active_users.get_user_by_username(to_username)
+        sender = active_users.get_current_user()
+        if receiver:
+            emit("send message", message, room=receiver.sid)
+            emit("send message", message, room=sender.sid)

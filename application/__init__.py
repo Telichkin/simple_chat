@@ -3,10 +3,13 @@ from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 
+from application.utils import ActiveUsers
+
 
 db = SQLAlchemy()
 jwt = JWTManager()
 socket_io = SocketIO()
+active_users = ActiveUsers()
 
 
 def create(config_object):
