@@ -20,7 +20,12 @@ def create(config_object):
     jwt.init_app(app)
     socket_io.init_app(app)
 
-    from .simple_chat import root
-    app.register_blueprint(root)
+    from .auth_endpoint import auth_endpoint
+    app.register_blueprint(auth_endpoint)
+
+    from .users_endpoint import user_endpoint
+    app.register_blueprint(user_endpoint)
+
+    from . import simple_chat
 
     return app

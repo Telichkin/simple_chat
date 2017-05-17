@@ -2,7 +2,7 @@ from tests.utils import BaseTestCase
 from application import socket_io
 
 
-class SocketTest(BaseTestCase):
+class SocketIOTest(BaseTestCase):
     def setUp(self):
         super().setUp()
         self.user_data_list = [
