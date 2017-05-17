@@ -30,3 +30,11 @@ class UserCreationNegativeTestCase(BaseTestCase):
     def test_should_return_400_without_username(self):
         response = self.json_post(self.uri, data={"password": "myPWD"})
         assert response.status_code == 400
+
+    def test_should_not_create_user_without_password(self):
+        self.json_post(self.uri, data={"username": "Cool!"})
+        assert not User.query.all()
+
+    def test_should_not_create_user_without_username(self):
+        self.json_post(self.uri, data={"password": "myPWD"})
+        assert not User.query.all()
