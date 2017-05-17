@@ -1,3 +1,5 @@
+import json
+
 from flask_testing import TestCase
 
 import config
@@ -16,5 +18,10 @@ class UserCreationPositiveTestCase(TestCase):
         }
 
     def test_should_return_201_on_creation(self):
-        response = self.client.post(self.uri, data=self.user_data)
+        response = self.get_create_response(data=self.user_data)
         assert response.status_code == 201
+
+    def get_create_response(self, data):
+        return self.client.post(self.uri,
+                                data=json.dumps(data),
+                                content_type="application/json")
