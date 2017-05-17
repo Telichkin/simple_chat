@@ -18,3 +18,9 @@ class UserLoginPositive(BaseTestCase):
 
     def test_should_return_200(self):
         assert self.response.status_code == 200
+
+    def test_should_contain_token_field(self):
+        assert "token" in self.response.json
+
+    def test_should_return_token(self):
+        assert self.response.json["token"]

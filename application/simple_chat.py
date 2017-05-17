@@ -31,4 +31,8 @@ def create_user():
 
 @root.route("/auth/", methods=["POST"])
 def token_auth():
-    return "", 200
+    auth_data = request.get_json()
+
+    username = auth_data.get("username", None)
+
+    return jsonify({"token": create_access_token(identity=username)}), 200
