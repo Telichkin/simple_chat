@@ -15,7 +15,7 @@ class UserCreationPositiveTestCase(BaseTestCase):
         assert self.response.status_code == 201
 
     def test_should_create_user_in_db(self):
-        assert User.query.filter_by(username=self.user_data["username"])
+        assert User.query.filter_by(username=self.user_data["username"]).first()
 
     def test_should_return_token(self):
         assert "token" in self.response.json
@@ -44,6 +44,20 @@ class UserCreationNegativeTestCase(BaseTestCase):
     def test_should_not_create_user_without_username(self):
         self.json_post(self.uri, data={"password": "myPWD"})
         assert not User.query.all()
+
+    def test_should_not_create_users_with_same_username(self):
+        self.json_post(self.uri, data={"username": "First",
+                                       "password": "First"})
+        response = self.json_post(self.uri, data={"username": "First",
+                                                  "password": "First"})
+        assert response.status_code == 400
+
+    def test_should_not_return_token_for_users_with_same_username(self):
+        self.json_post(self.uri, data={"username": "First",
+                                       "password": "First"})
+        response = self.json_post(self.uri, data={"username": "First",
+                                                  "password": "First"})
+        assert "token" not in response.json
 
     def test_should_not_return_token_without_password(self):
         response = self.json_post(self.uri, data={"username": "Cool!"})

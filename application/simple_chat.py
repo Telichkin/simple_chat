@@ -20,6 +20,9 @@ def create_user():
     if not username:
         return jsonify({"error": "Username is needed"}), 400
 
+    if User.query.filter_by(username=username).first():
+        return jsonify({"error": "User with current username already exists"}), 400
+
     user = User(username, password)
     db.session.add(user)
     db.session.commit()
