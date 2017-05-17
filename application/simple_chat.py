@@ -13,11 +13,11 @@ def create_user():
 
     password = user_data.get("password", None)
     if not password:
-        return "Password is needed", 400
+        return jsonify({"error": "Password is needed"}), 400
 
     username = user_data.get("username", None)
     if not username:
-        return "Username is needed", 400
+        return jsonify({"error": "Username is needed"}), 400
 
     user = User(username, password)
     db.session.add(user)

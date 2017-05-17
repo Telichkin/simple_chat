@@ -41,3 +41,11 @@ class UserCreationNegativeTestCase(BaseTestCase):
     def test_should_not_create_user_without_username(self):
         self.json_post(self.uri, data={"password": "myPWD"})
         assert not User.query.all()
+
+    def test_should_not_return_token_without_password(self):
+        response = self.json_post(self.uri, data={"username": "Cool!"})
+        assert "token" not in response.json
+
+    def test_should_not_return_token_without_username(self):
+        response = self.json_post(self.uri, data={"password": "myPWD"})
+        assert "token" not in response.json
