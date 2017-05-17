@@ -13,24 +13,19 @@ class UserCreationPositiveTestCase(TestCase):
 
     def setUp(self):
         application.db.create_all()
-        self.uri = "/users/"
         self.user_data = {
             "username": "Telichkin",
             "password": "SuperPWD!"
         }
+        self.response = self.client.post("/users/",
+                                         data=json.dumps(self.user_data),
+                                         content_type="application/json")
 
     def test_should_return_201(self):
-        response = self.get_create_response(data=self.user_data)
-        assert response.status_code == 201
+        assert self.response.status_code == 201
 
     def test_should_create_user_in_db(self):
-        self.get_create_response(data=self.user_data)
         assert User.query.filter_by(username=self.user_data["username"])
-
-    def get_create_response(self, data):
-        return self.client.post(self.uri,
-                                data=json.dumps(data),
-                                content_type="application/json")
 
     def tearDown(self):
         application.db.session.remove()
