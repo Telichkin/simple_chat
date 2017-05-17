@@ -1,6 +1,8 @@
 from flask_socketio import send
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, tokens
+from flask_jwt_extended.config import config
+from jwt.exceptions import DecodeError
 
 from application import db, socket_io
 from application.models import User
@@ -49,6 +51,22 @@ def token_auth():
     return jsonify({"token": create_access_token(identity=username)}), 200
 
 
-@socket_io.on("connect")
-def connect_global_chat():
-    send("Connected!")
+def get_username_from_token(token):
+    try:
+        username = tokens.decode_jwt(token, config.decode_key, config.algorithm, csrf=False)["identity"]
+    except DecodeError:
+        username = None
+    return username
+
+
+@socket_io.on("auth")
+def auth_global_chat(json):
+    if "token" not in json:
+        send("Token is needed")
+        return
+
+    username = get_username_from_token(json["token"])
+    if not username:
+        send("authentication error")
+    else:
+        send("authenticated")
