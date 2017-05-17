@@ -59,6 +59,9 @@ def get_username_from_token(token):
     return username
 
 
+active_users = {}
+
+
 @socket_io.on("auth")
 def auth_global_chat(json):
     if "token" not in json:
@@ -70,10 +73,14 @@ def auth_global_chat(json):
         send("authentication error")
     else:
         send("authenticated")
+        active_users[username] = request.sid
 
 
 @socket_io.on("send message")
 def send_message(json):
+    if request.sid not in active_users.values():
+        return
+
     to = json.get("to", None)
     message = json.get("message", None)
 

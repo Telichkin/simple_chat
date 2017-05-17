@@ -30,6 +30,11 @@ class AuthBase(BaseTestCase):
         self.client_list[0].emit("auth", {})
         assert self.client_list[0].get_received()[0]["args"] == "Token is needed"
 
+        # Not auth broadcasting
+        self.client_list[1].emit("send message", {"to": "all", "message": self.message})
+        response_list = [client.get_received() for client in self.client_list]
+        assert all([len(response) == 0 for response in response_list])
+
         # Broadcasting
         self.client_list[1].send("auth", {"token": self.token_list[1]})
         self.client_list[2].send("auth", {"token": self.token_list[2]})
