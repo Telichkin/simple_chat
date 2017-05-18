@@ -4,6 +4,7 @@ colorama==0.3.9
 enum-compat==0.0.2
 eventlet==0.21.0
 Flask==0.12.2
+Flask-And-Redis==0.7
 Flask-JWT-Extended==2.0.0
 Flask-SocketIO==2.8.6
 Flask-SQLAlchemy==2.2
@@ -12,6 +13,7 @@ greenlet==0.4.12
 itsdangerous==0.24
 Jinja2==2.9.6
 MarkupSafe==1.0
+mockredispy==2.9.3
 packaging==16.8
 py==1.4.33
 PyJWT==1.4.2
