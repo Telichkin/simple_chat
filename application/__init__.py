@@ -1,4 +1,5 @@
 from flask import Flask
+from redis import StrictRedis
 from flask_jwt_extended import JWTManager
 from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy
@@ -6,6 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 jwt = JWTManager()
+redis = StrictRedis()
 socket_io = SocketIO()
 
 
