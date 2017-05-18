@@ -1,45 +1,9 @@
 from flask_socketio import send, emit
 
-from application import socket_io, active_users
-from application.utils.decorators import auth_required
+from application import socket_io, active_users, message_history
+from application.utils.decorators import auth_required, save_to_history
 from application.utils.tokens import get_username_from_token
 from application.utils.events import IncomingEvents, OutgoingEvents
-
-
-def send_private_message(message, to_user):
-    emit(OutgoingEvents.SEND_PRIVATE_MESSAGE, message, room=to_user.sid)
-
-
-def send_global_message(message):
-    emit(OutgoingEvents.SEND_GLOBAL_MESSAGE, message, broadcast=True)
-
-
-def notify_subscribers():
-    active_username_list = [user.username for user in active_users.get_all()]
-    send(active_username_list, broadcast=True, namespace="/active-users")
-
-
-class MessageHistory:
-    def __init__(self):
-        self._global = []
-        self._private = {}
-
-    def add_global(self, message):
-        self._global.append(message)
-
-    def get_global(self):
-        return self._global
-
-    def add_private(self, message, to_user):
-        if to_user.username not in self._private:
-            self._private[to_user.username] = []
-        self._private[to_user.username].append(message)
-
-    def get_private(self, username):
-        return self._private.get(username, [])
-
-
-message_history = MessageHistory()
 
 
 @socket_io.on(IncomingEvents.AUTH)
@@ -54,8 +18,8 @@ def on_auth(json):
         send("authentication error")
     else:
         active_users.add(username)
-        emit(OutgoingEvents.GLOBAL_MESSAGE_HISTORY, message_history.get_global())
-        emit(OutgoingEvents.PRIVATE_MESSAGE_HISTORY, message_history.get_private(username))
+        send_global_history()
+        send_private_history(username)
         notify_subscribers()
 
 
@@ -72,8 +36,6 @@ def on_private_message(current_user, json):
     if receiver:
         send_private_message(message, to_user=receiver)
         send_private_message(message, to_user=current_user)
-        message_history.add_private(message, to_user=receiver)
-        message_history.add_private(message, to_user=current_user)
 
 
 @socket_io.on(IncomingEvents.SEND_GLOBAL_MESSAGE)
@@ -83,7 +45,6 @@ def on_global_message(current_user, json):
     if text:
         message = {"message": text, "author": current_user.username}
         send_global_message(message)
-        message_history.add_global(message)
 
 
 @socket_io.on(IncomingEvents.DISCONNECT)
@@ -98,3 +59,26 @@ def on_disconnect(current_user):
 def on_subscribe_for_active_users(current_user):
     active_username_list = [user.username for user in active_users.get_all()]
     send(active_username_list, namespace="/active-users")
+
+
+@save_to_history
+def send_private_message(message, to_user):
+    emit(OutgoingEvents.SEND_PRIVATE_MESSAGE, message, room=to_user.sid)
+
+
+@save_to_history
+def send_global_message(message):
+    emit(OutgoingEvents.SEND_GLOBAL_MESSAGE, message, broadcast=True)
+
+
+def send_global_history():
+    emit(OutgoingEvents.GLOBAL_MESSAGE_HISTORY, message_history.get_global())
+
+
+def send_private_history(username):
+    emit(OutgoingEvents.PRIVATE_MESSAGE_HISTORY, message_history.get_private(username))
+
+
+def notify_subscribers():
+    active_username_list = [user.username for user in active_users.get_all()]
+    send(active_username_list, broadcast=True, namespace="/active-users")
