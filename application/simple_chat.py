@@ -2,15 +2,15 @@ from flask_socketio import send, emit
 
 from application import socket_io, active_users
 from application.utils import get_username_from_token
-from application.decorators import user_should_be_active
+from application.decorators import auth_required
 from application.events import IncomingEvents, OutgoingEvents
 
 
-def send_message(message, to_user):
+def send_private_message(message, to_user):
     emit(OutgoingEvents.SEND_MESSAGE, message, room=to_user.sid)
 
 
-def broadcast_message(message):
+def send_global_message(message):
     emit(OutgoingEvents.SEND_MESSAGE, message, broadcast=True)
 
 
@@ -20,7 +20,7 @@ def notify_subscribers():
 
 
 @socket_io.on(IncomingEvents.AUTH)
-def on_user_auth(json):
+def on_auth(json):
     token = json.get("token", None)
     if not token:
         send("Token is needed")
@@ -35,33 +35,38 @@ def on_user_auth(json):
         notify_subscribers()
 
 
-@socket_io.on(IncomingEvents.SEND_MESSAGE)
-@user_should_be_active
-def on_send_message(current_user, json):
+@socket_io.on(IncomingEvents.SEND_PRIVATE_MESSAGE)
+@auth_required
+def on_private_message(current_user, json):
     to_username = json.get("to", None)
     text = json.get("message", None)
     if not to_username or not text:
         return
 
     message = {"message": text, "author": current_user.username}
-    if to_username == "all":
-        broadcast_message(message)
-    else:
-        receiver = active_users.get_user_by_username(to_username)
-        if receiver:
-            send_message(message, to_user=receiver)
-            send_message(message, to_user=current_user)
+    receiver = active_users.get_user_by_username(to_username)
+    if receiver:
+        send_private_message(message, to_user=receiver)
+        send_private_message(message, to_user=current_user)
+
+
+@socket_io.on(IncomingEvents.SEND_GLOBAL_MESSAGE)
+@auth_required
+def on_global_message(current_user, json):
+    text = json.get("message", None)
+    if text:
+        send_global_message({"message": text, "author": current_user.username})
 
 
 @socket_io.on(IncomingEvents.DISCONNECT)
-@user_should_be_active
+@auth_required
 def on_disconnect(current_user):
     active_users.remove_current_user()
     notify_subscribers()
 
 
 @socket_io.on(IncomingEvents.CONNECT, namespace="/active-users")
-@user_should_be_active
+@auth_required
 def on_subscribe_for_active_users(current_user):
     active_username_list = [user.username for user in active_users.get_all()]
     send(active_username_list, namespace="/active-users")
