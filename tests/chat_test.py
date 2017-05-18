@@ -1,4 +1,4 @@
-from application import socket_io
+from application import socket_io, redis
 from application.utils.events import IncomingEvents, OutgoingEvents
 from tests.utils import BaseTestCase
 
@@ -15,6 +15,9 @@ class SocketIOTest(BaseTestCase):
         self.token_list = [self.json_post("/users/", user_data).json["token"]
                            for user_data in self.user_data_list]
         self.message = "What's up?!"
+
+    def tearDown(self):
+        redis.flushdb()
 
     # SocketTO().test_client works incorrectly, it can't receive messages when more than 1
     # tests with it is written.
@@ -92,7 +95,8 @@ class SocketIOTest(BaseTestCase):
                              "to": self.user_data_list[1]["username"]}]
         actual_history = [received["args"][0] for received in self.client_list[1].get_received()
                           if received["name"] == OutgoingEvents.PRIVATE_MESSAGE_HISTORY][0]
-        assert actual_history == expected_history
+        assert sorted(actual_history, key=lambda x: x["author"]) == \
+               sorted(expected_history, key=lambda x: x["author"])
 
         # Get private message even user is offline
         self.client_list[0].disconnect()
@@ -110,4 +114,5 @@ class SocketIOTest(BaseTestCase):
         self.client_list[0].emit(IncomingEvents.AUTH, {"token": self.token_list[0]})
         actual_history = [received["args"][0] for received in self.client_list[0].get_received()
                           if received["name"] == OutgoingEvents.PRIVATE_MESSAGE_HISTORY][0]
-        assert actual_history == expected_history
+        assert sorted(actual_history, key=lambda x: x["author"]) ==\
+            sorted(expected_history, key=lambda x: x["author"])
