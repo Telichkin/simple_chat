@@ -17,7 +17,7 @@ def create(config_object):
 
     db.init_app(app)
     jwt.init_app(app)
-    socket_io.init_app(app)
+    socket_io.init_app(app, async_mode="eventlet")
 
     from .auth_endpoint import auth_endpoint
     app.register_blueprint(auth_endpoint)
