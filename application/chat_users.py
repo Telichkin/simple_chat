@@ -15,7 +15,8 @@ class ActiveUser:
 
     def send_private_message(self, message, to_user):
         full_message = self.get_full_message(message, to_user.username)
-        emit(OutgoingEvents.SEND_PRIVATE_MESSAGE, full_message, room=to_user.sid)
+        if hasattr(to_user, "sid"):
+            emit(OutgoingEvents.SEND_PRIVATE_MESSAGE, full_message, room=to_user.sid)
         emit(OutgoingEvents.SEND_PRIVATE_MESSAGE, full_message, room=self.sid)
         message_history.save_private(full_message, to_user.username, self.username)
 

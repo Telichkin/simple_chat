@@ -1,6 +1,7 @@
 from flask_socketio import send, emit
 
 from application import socket_io
+from application.models import User
 from application.chat_users import active_users
 from application.chat_history import message_history
 from application.utils.decorators import auth_required, fields_required
@@ -26,7 +27,7 @@ def on_auth(token):
 @auth_required
 def on_private_message(message, to):
     current_user = active_users.get_current()
-    receiver = active_users.get_by_username(to)
+    receiver = active_users.get_by_username(to) or User.query.filter_by(username=to).first()
     if receiver:
         current_user.send_private_message(message, to_user=receiver)
 

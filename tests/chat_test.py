@@ -94,3 +94,20 @@ class SocketIOTest(BaseTestCase):
                           if received["name"] == OutgoingEvents.PRIVATE_MESSAGE_HISTORY][0]
         assert actual_history == expected_history
 
+        # Get private message even user is offline
+        self.client_list[0].disconnect()
+        self.client_list[2].emit(IncomingEvents.SEND_PRIVATE_MESSAGE,
+                                 {"message": self.message, "to": self.user_data_list[0]["username"]})
+        self.client_list[1].emit(IncomingEvents.SEND_PRIVATE_MESSAGE,
+                                 {"message": self.message, "to": self.user_data_list[0]["username"]})
+        expected_history = [{"message": self.message, "author": self.user_data_list[0]["username"],
+                             "to": self.user_data_list[1]["username"]},
+                            {"message": self.message, "author": self.user_data_list[2]["username"],
+                             "to": self.user_data_list[0]["username"]},
+                            {"message": self.message, "author": self.user_data_list[1]["username"],
+                             "to": self.user_data_list[0]["username"]}]
+        self.client_list[0].connect()
+        self.client_list[0].emit(IncomingEvents.AUTH, {"token": self.token_list[0]})
+        actual_history = [received["args"][0] for received in self.client_list[0].get_received()
+                          if received["name"] == OutgoingEvents.PRIVATE_MESSAGE_HISTORY][0]
+        assert actual_history == expected_history
