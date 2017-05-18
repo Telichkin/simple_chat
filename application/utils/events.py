@@ -7,4 +7,5 @@ class IncomingEvents:
 
 
 class OutgoingEvents:
-    SEND_MESSAGE = "send message"
+    SEND_PRIVATE_MESSAGE = "send private message"
+    SEND_GLOBAL_MESSAGE = "broadcast"

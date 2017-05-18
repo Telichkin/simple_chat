@@ -7,11 +7,11 @@ from application.utils.events import IncomingEvents, OutgoingEvents
 
 
 def send_private_message(message, to_user):
-    emit(OutgoingEvents.SEND_MESSAGE, message, room=to_user.sid)
+    emit(OutgoingEvents.SEND_PRIVATE_MESSAGE, message, room=to_user.sid)
 
 
 def send_global_message(message):
-    emit(OutgoingEvents.SEND_MESSAGE, message, broadcast=True)
+    emit(OutgoingEvents.SEND_GLOBAL_MESSAGE, message, broadcast=True)
 
 
 def notify_subscribers():
