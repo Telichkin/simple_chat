@@ -1,5 +1,5 @@
 from application import socket_io
-from application.utils.events import IncomingEvents
+from application.utils.events import IncomingEvents, OutgoingEvents
 from tests.utils import BaseTestCase
 
 
@@ -75,3 +75,16 @@ class SocketIOTest(BaseTestCase):
         # Get global message history after connect
         global_message_history = self.client_list[0].get_received()[0]["args"][0]
         assert global_message_history == [{"message": self.message, "author": self.user_data_list[0]["username"]}]
+
+        # Get private message history after connect
+        self.client_list[2].emit(IncomingEvents.SEND_PRIVATE_MESSAGE,
+                                 {"message": self.message, "to": self.user_data_list[1]["username"]})
+        self.client_list[1].disconnect()
+        self.client_list[1].connect()
+        self.client_list[1].emit(IncomingEvents.AUTH, {"token": self.token_list[1]})
+        # # # User 0 sent private message earlier # # #
+        expected_history = [{"message": self.message, "author": self.user_data_list[0]["username"]},
+                            {"message": self.message, "author": self.user_data_list[2]["username"]}]
+        actual_history = [received["args"][0] for received in self.client_list[1].get_received()
+                          if received["name"] == OutgoingEvents.PRIVATE_MESSAGE_HISTORY][0]
+        assert actual_history == expected_history

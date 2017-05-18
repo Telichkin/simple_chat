@@ -22,12 +22,21 @@ def notify_subscribers():
 class MessageHistory:
     def __init__(self):
         self._global = []
+        self._private = {}
 
     def add_global(self, message):
         self._global.append(message)
 
     def get_global(self):
         return self._global
+
+    def add_private(self, message, to_user):
+        if to_user.username not in self._private:
+            self._private[to_user.username] = []
+        self._private[to_user.username].append(message)
+
+    def get_private(self, username):
+        return self._private.get(username, [])
 
 
 message_history = MessageHistory()
@@ -46,6 +55,7 @@ def on_auth(json):
     else:
         active_users.add(username)
         emit(OutgoingEvents.GLOBAL_MESSAGE_HISTORY, message_history.get_global())
+        emit(OutgoingEvents.PRIVATE_MESSAGE_HISTORY, message_history.get_private(username))
         notify_subscribers()
 
 
@@ -62,6 +72,8 @@ def on_private_message(current_user, json):
     if receiver:
         send_private_message(message, to_user=receiver)
         send_private_message(message, to_user=current_user)
+        message_history.add_private(message, to_user=receiver)
+        message_history.add_private(message, to_user=current_user)
 
 
 @socket_io.on(IncomingEvents.SEND_GLOBAL_MESSAGE)
