@@ -13,7 +13,7 @@ from application.utils.events import IncomingEvents, OutgoingEvents
 def on_auth(token):
     username = get_username_from_token(token)
     if not username:
-        send("authentication error")
+        send("Invalid token")
     else:
         active_users.add(username)
         send_global_history()
@@ -36,7 +36,7 @@ def on_private_message(message, to):
 @auth_required
 def on_global_message(message):
     current_user = active_users.get_current()
-    current_user.send_global_message(message)
+    current_user.send_public_message(message)
 
 
 @socket_io.on(IncomingEvents.DISCONNECT)
@@ -54,7 +54,7 @@ def on_subscribe_for_active_users():
 
 
 def send_global_history():
-    emit(OutgoingEvents.GLOBAL_MESSAGE_HISTORY, message_history.get_global())
+    emit(OutgoingEvents.GLOBAL_MESSAGE_HISTORY, message_history.get_public())
 
 
 def send_private_history(username):

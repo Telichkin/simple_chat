@@ -28,7 +28,7 @@ class SocketIOTest(BaseTestCase):
 
         # Not auth with incorrect token
         self.client_list[0].emit(IncomingEvents.AUTH, {"token": self.token_list[0][:-3] + "qwe"})
-        assert self.client_list[0].get_received()[0]["args"] == "authentication error"
+        assert self.client_list[0].get_received()[0]["args"] == "Invalid token"
 
         # Not auth without token
         self.client_list[0].emit(IncomingEvents.AUTH, {})
@@ -48,6 +48,7 @@ class SocketIOTest(BaseTestCase):
         response_list = [client.get_received()[0]["args"][0] for client in self.client_list]
         assert all([response["message"] == self.message for response in response_list])
         assert all([response["author"] == self.user_data_list[0]["username"] for response in response_list])
+        assert all([response["to"] is None for response in response_list])
 
         # Private talk
         self.client_list[0].emit(IncomingEvents.SEND_PRIVATE_MESSAGE, {"to": self.user_data_list[1]["username"],
@@ -55,6 +56,7 @@ class SocketIOTest(BaseTestCase):
         response_list = [client.get_received()[0]["args"][0] for client in self.client_list[:2]]
         assert all([response["message"] == self.message for response in response_list])
         assert all([response["author"] == self.user_data_list[0]["username"] for response in response_list])
+        assert all([response["to"] == self.user_data_list[1]["username"] for response in response_list])
 
         # Get all active users
         self.client_list[1].connect(namespace="/active-users")
@@ -74,7 +76,8 @@ class SocketIOTest(BaseTestCase):
 
         # Get global message history after connect
         global_message_history = self.client_list[0].get_received()[0]["args"][0]
-        assert global_message_history == [{"message": self.message, "author": self.user_data_list[0]["username"]}]
+        assert global_message_history == [{"message": self.message, "author": self.user_data_list[0]["username"],
+                                           "to": None}]
 
         # Get private message history after connect
         self.client_list[2].emit(IncomingEvents.SEND_PRIVATE_MESSAGE,
@@ -83,8 +86,11 @@ class SocketIOTest(BaseTestCase):
         self.client_list[1].connect()
         self.client_list[1].emit(IncomingEvents.AUTH, {"token": self.token_list[1]})
         # # # User 0 sent private message earlier # # #
-        expected_history = [{"message": self.message, "author": self.user_data_list[0]["username"]},
-                            {"message": self.message, "author": self.user_data_list[2]["username"]}]
+        expected_history = [{"message": self.message, "author": self.user_data_list[0]["username"],
+                             "to": self.user_data_list[1]["username"]},
+                            {"message": self.message, "author": self.user_data_list[2]["username"],
+                             "to": self.user_data_list[1]["username"]}]
         actual_history = [received["args"][0] for received in self.client_list[1].get_received()
                           if received["name"] == OutgoingEvents.PRIVATE_MESSAGE_HISTORY][0]
         assert actual_history == expected_history
+

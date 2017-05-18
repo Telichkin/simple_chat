@@ -10,21 +10,19 @@ class ActiveUser:
         self.username = username
         self.sid = sid
 
-    def get_full_message(self, message):
-        return {"message": message, "author": self.username}
+    def get_full_message(self, message, to_username=None):
+        return {"message": message, "author": self.username, "to": to_username}
 
     def send_private_message(self, message, to_user):
-        full_message = self.get_full_message(message)
+        full_message = self.get_full_message(message, to_user.username)
         emit(OutgoingEvents.SEND_PRIVATE_MESSAGE, full_message, room=to_user.sid)
         emit(OutgoingEvents.SEND_PRIVATE_MESSAGE, full_message, room=self.sid)
+        message_history.save_private(full_message, to_user.username, self.username)
 
-        message_history.add_private(full_message, to_user.username)
-        message_history.add_private(full_message, self.username)
-
-    def send_global_message(self, message):
+    def send_public_message(self, message):
         full_message = self.get_full_message(message)
         emit(OutgoingEvents.SEND_GLOBAL_MESSAGE, full_message, broadcast=True)
-        message_history.add_global(full_message)
+        message_history.save_public(full_message)
 
 
 class ActiveUsers:
