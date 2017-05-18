@@ -1,4 +1,4 @@
-from application import socket_io, redis
+from application import socket_io
 from application.utils.events import IncomingEvents, OutgoingEvents
 from tests.utils import BaseTestCase
 
@@ -15,9 +15,6 @@ class SocketIOTest(BaseTestCase):
         self.token_list = [self.json_post("/users/", user_data).json["token"]
                            for user_data in self.user_data_list]
         self.message = "What's up?!"
-
-    def tearDown(self):
-        redis.flushdb()
 
     # SocketTO().test_client works incorrectly, it can't receive messages when more than 1
     # tests with it is written.

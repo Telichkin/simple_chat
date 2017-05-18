@@ -10,6 +10,9 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'db.sqlite')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SOCKETIO_MESSAGE_QUEUE = "redis://"
+    REDIS_CLASS = "redis.StrictRedis"
+    REDIS_HOST = "redis"
+    REDIS_DB = 0
 
 
 class ProductionConfig(Config):
@@ -19,6 +22,7 @@ class ProductionConfig(Config):
 class DevelopmentConfig(Config):
     DEBUG = True
     SECRET_KEY = "development"
+    REDIS_HOST = "localhost"
 
 
 class TestingConfig(Config):
@@ -26,3 +30,4 @@ class TestingConfig(Config):
     TESTING = True
     SECRET_KEY = "testing"
     SQLALCHEMY_DATABASE_URI = 'sqlite://'
+    REDIS_CLASS = "mockredis.mock_strict_redis_client"
