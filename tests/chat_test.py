@@ -1,6 +1,6 @@
-from tests.utils import BaseTestCase
 from application import socket_io
-from application.events import IncomingEvents
+from application.utils.events import IncomingEvents
+from tests.utils import BaseTestCase
 
 
 class SocketIOTest(BaseTestCase):

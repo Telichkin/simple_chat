@@ -3,7 +3,7 @@ from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 
-from application.utils import ActiveUsers
+from application.utils.objects import ActiveUsers
 
 
 db = SQLAlchemy()
@@ -26,6 +26,6 @@ def create(config_object):
     from .users_endpoint import user_endpoint
     app.register_blueprint(user_endpoint)
 
-    from . import simple_chat
+    from . import chat
 
     return app

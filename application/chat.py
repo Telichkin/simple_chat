@@ -1,9 +1,9 @@
 from flask_socketio import send, emit
 
 from application import socket_io, active_users
-from application.utils import get_username_from_token
-from application.decorators import auth_required
-from application.events import IncomingEvents, OutgoingEvents
+from application.utils.decorators import auth_required
+from application.utils.tokens import get_username_from_token
+from application.utils.events import IncomingEvents, OutgoingEvents
 
 
 def send_private_message(message, to_user):
