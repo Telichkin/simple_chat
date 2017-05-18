@@ -22,21 +22,24 @@ class SocketIOTest(BaseTestCase):
         self.client_list[0] = socket_io.test_client(self.app)
         self.client_list[0].get_received()
 
+        # Get message list after auth
         self.client_list[0].emit(IncomingEvents.AUTH, {"token": self.token_list[0]})
-        assert self.client_list[0].get_received()[0]["args"] == "authenticated"
+        assert self.client_list[0].get_received()[0]["args"][0] == []
 
+        # Not auth with incorrect token
         self.client_list[0].emit(IncomingEvents.AUTH, {"token": self.token_list[0][:-3] + "qwe"})
         assert self.client_list[0].get_received()[0]["args"] == "authentication error"
 
+        # Not auth without token
         self.client_list[0].emit(IncomingEvents.AUTH, {})
         assert self.client_list[0].get_received()[0]["args"] == "Token is needed"
 
-        # Not auth broadcasting
+        # Not broadcasting without auth
         self.client_list[1].emit(IncomingEvents.SEND_GLOBAL_MESSAGE, {"message": self.message})
         response_list = [client.get_received() for client in self.client_list]
         assert all([len(response) == 0 for response in response_list])
 
-        # Auth broadcasting
+        # Broadcasting with auth
         self.client_list[1].emit(IncomingEvents.AUTH, {"token": self.token_list[1]})
         self.client_list[2].emit(IncomingEvents.AUTH, {"token": self.token_list[2]})
         self.client_list[1].get_received(), self.client_list[2].get_received()
@@ -68,3 +71,7 @@ class SocketIOTest(BaseTestCase):
         self.client_list[0].emit(IncomingEvents.AUTH, {"token": self.token_list[0]})
         response = self.client_list[1].get_received("/active-users")[0]["args"]
         assert sorted(response) == sorted([user["username"] for user in self.user_data_list])
+
+        # Get global message history after connect
+        global_message_history = self.client_list[0].get_received()[0]["args"][0]
+        assert global_message_history == [{"message": self.message, "author": self.user_data_list[0]["username"]}]

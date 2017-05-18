@@ -19,6 +19,20 @@ def notify_subscribers():
     send(active_username_list, broadcast=True, namespace="/active-users")
 
 
+class MessageHistory:
+    def __init__(self):
+        self._global = []
+
+    def add_global(self, message):
+        self._global.append(message)
+
+    def get_global(self):
+        return self._global
+
+
+message_history = MessageHistory()
+
+
 @socket_io.on(IncomingEvents.AUTH)
 def on_auth(json):
     token = json.get("token", None)
@@ -31,7 +45,7 @@ def on_auth(json):
         send("authentication error")
     else:
         active_users.add(username)
-        send("authenticated")
+        emit(OutgoingEvents.GLOBAL_MESSAGE_HISTORY, message_history.get_global())
         notify_subscribers()
 
 
@@ -55,7 +69,9 @@ def on_private_message(current_user, json):
 def on_global_message(current_user, json):
     text = json.get("message", None)
     if text:
-        send_global_message({"message": text, "author": current_user.username})
+        message = {"message": text, "author": current_user.username}
+        send_global_message(message)
+        message_history.add_global(message)
 
 
 @socket_io.on(IncomingEvents.DISCONNECT)
