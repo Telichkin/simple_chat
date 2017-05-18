@@ -32,7 +32,7 @@ class SocketIOTest(BaseTestCase):
 
         # Not auth without token
         self.client_list[0].emit(IncomingEvents.AUTH, {})
-        assert self.client_list[0].get_received()[0]["args"] == "Token is needed"
+        assert self.client_list[0].get_received()[0]["args"] == "Missed required fields: ['token']"
 
         # Not broadcasting without auth
         self.client_list[1].emit(IncomingEvents.SEND_GLOBAL_MESSAGE, {"message": self.message})
