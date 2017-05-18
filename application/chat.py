@@ -1,7 +1,9 @@
 from flask_socketio import send, emit
 
-from application import socket_io, active_users, message_history
-from application.utils.decorators import auth_required, save_to_history, fields_required
+from application import socket_io
+from application.chat_users import active_users
+from application.chat_history import message_history
+from application.utils.decorators import auth_required, fields_required
 from application.utils.tokens import get_username_from_token
 from application.utils.events import IncomingEvents, OutgoingEvents
 
@@ -24,11 +26,9 @@ def on_auth(token):
 @auth_required
 def on_private_message(message, to):
     current_user = active_users.get_current()
-    message = {"message": message, "author": current_user.username}
     receiver = active_users.get_by_username(to)
     if receiver:
-        send_private_message(message, to_user=receiver)
-        send_private_message(message, to_user=current_user)
+        current_user.send_private_message(message, to_user=receiver)
 
 
 @socket_io.on(IncomingEvents.SEND_GLOBAL_MESSAGE)
@@ -36,8 +36,7 @@ def on_private_message(message, to):
 @auth_required
 def on_global_message(message):
     current_user = active_users.get_current()
-    message = {"message": message, "author": current_user.username}
-    send_global_message(message)
+    current_user.send_global_message(message)
 
 
 @socket_io.on(IncomingEvents.DISCONNECT)
@@ -52,16 +51,6 @@ def on_disconnect():
 def on_subscribe_for_active_users():
     active_username_list = [user.username for user in active_users.get_all()]
     send(active_username_list, namespace="/active-users")
-
-
-@save_to_history
-def send_private_message(message, to_user):
-    emit(OutgoingEvents.SEND_PRIVATE_MESSAGE, message, room=to_user.sid)
-
-
-@save_to_history
-def send_global_message(message):
-    emit(OutgoingEvents.SEND_GLOBAL_MESSAGE, message, broadcast=True)
 
 
 def send_global_history():

@@ -2,7 +2,7 @@ from functools import wraps
 
 from flask_socketio import send
 
-from application import active_users, message_history
+from application.chat_users import active_users
 
 
 def auth_required(fn):
@@ -11,18 +11,6 @@ def auth_required(fn):
         active_user = active_users.get_current()
         if active_user:
             return fn(*args, **kwargs)
-    return wrapper
-
-
-def save_to_history(fn):
-    @wraps(fn)
-    def wrapper(message, to_user=None):
-        if to_user:
-            message_history.add_private(message, to_user.username)
-            return fn(message, to_user)
-        else:
-            message_history.add_global(message)
-            return fn(message)
     return wrapper
 
 
