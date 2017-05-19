@@ -37,7 +37,7 @@ Both creation and authentication methods return token in response body.
 
 ### Backend can get events:
 
-#### /socket.io/
+#### /
 event | required payload fields
  --- | ----- 
 "auth" | "token"
@@ -48,7 +48,7 @@ event | required payload fields
 
 Before start to use other events you need to authenticate through "auth" event with token.
 
-#### /socket.io/active-users
+#### /active-users
 event | required payload fields
  --- | ----- 
 "connect" | None
@@ -57,7 +57,7 @@ event | required payload fields
 
 ### Backend can send events:
 
-#### /socket.io/
+#### /
 event | data
  --- | ----- 
 "send private message" | {"message": .., "author": .., "to": ..}
@@ -66,7 +66,7 @@ event | data
 "broadcast history" | list with messages from "broadcast"
 "error" | error message
 
-#### /socket.io/active-users
+#### /active-users
 event | data
  --- | ----- 
 "update" | list with user names of active users
