@@ -1,0 +1,18 @@
+version: "2"
+services:
+  redis:
+    image: redis:latest
+
+  chat:
+    build: .
+    command: python manage.py start --production --port=8000
+    environment:
+      SECRET_KEY: "Wow! So Secret!"
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/chat
+    links:
+      - "redis"
+    depends_on:
+      - "redis"
