@@ -1,4 +1,4 @@
-from flask_socketio import send, emit
+from flask_socketio import emit
 
 from application import socket_io
 from application.models import User
@@ -14,7 +14,7 @@ from application.utils.events import IncomingEvents, OutgoingEvents
 def on_auth(token):
     username = get_username_from_token(token)
     if not username:
-        send("Invalid token")
+        emit(OutgoingEvents.ERROR, "Invalid token")
     else:
         active_users.add(username)
         send_global_history()
@@ -51,7 +51,7 @@ def on_disconnect():
 @auth_required
 def on_subscribe_for_active_users():
     active_username_list = [user.username for user in active_users.get_all()]
-    send(active_username_list, namespace="/active-users")
+    emit(OutgoingEvents.UPDATE, active_username_list, namespace="/active-users")
 
 
 def send_global_history():
@@ -64,4 +64,4 @@ def send_private_history(username):
 
 def notify_subscribers():
     active_username_list = [user.username for user in active_users.get_all()]
-    send(active_username_list, broadcast=True, namespace="/active-users")
+    emit(OutgoingEvents.UPDATE, active_username_list, broadcast=True, namespace="/active-users")

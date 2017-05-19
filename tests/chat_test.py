@@ -28,11 +28,11 @@ class SocketIOTest(BaseTestCase):
 
         # Not auth with incorrect token
         self.client_list[0].emit(IncomingEvents.AUTH, {"token": self.token_list[0][:-3] + "qwe"})
-        assert self.client_list[0].get_received()[0]["args"] == "Invalid token"
+        assert self.client_list[0].get_received()[0]["args"][0] == "Invalid token"
 
         # Not auth without token
         self.client_list[0].emit(IncomingEvents.AUTH, {})
-        assert self.client_list[0].get_received()[0]["args"] == "Missed required fields: ['token']"
+        assert self.client_list[0].get_received()[0]["args"][0] == "Missed required fields: ['token']"
 
         # Not broadcasting without auth
         self.client_list[1].emit(IncomingEvents.SEND_GLOBAL_MESSAGE, {"message": self.message})
@@ -60,18 +60,18 @@ class SocketIOTest(BaseTestCase):
 
         # Get all active users
         self.client_list[1].connect(namespace="/active-users")
-        response = self.client_list[1].get_received("/active-users")[0]["args"]
+        response = self.client_list[1].get_received("/active-users")[0]["args"][0]
         assert sorted(response) == sorted([user["username"] for user in self.user_data_list])
 
         # Notify subscribers if someone disconnect
         self.client_list[0].disconnect()
-        response = self.client_list[1].get_received("/active-users")[0]["args"]
+        response = self.client_list[1].get_received("/active-users")[0]["args"][0]
         assert sorted(response) == sorted([user["username"] for user in self.user_data_list[1:]])
 
         # Notify subscribers if someone connect
         self.client_list[0].connect()
         self.client_list[0].emit(IncomingEvents.AUTH, {"token": self.token_list[0]})
-        response = self.client_list[1].get_received("/active-users")[0]["args"]
+        response = self.client_list[1].get_received("/active-users")[0]["args"][0]
         assert sorted(response) == sorted([user["username"] for user in self.user_data_list])
 
         # Get global message history after connect

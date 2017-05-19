@@ -1,8 +1,9 @@
 from functools import wraps
 
-from flask_socketio import send
+from flask_socketio import emit
 
 from application.chat_users import active_users
+from application.utils.events import OutgoingEvents
 
 
 def auth_required(fn):
@@ -21,7 +22,7 @@ def fields_required(field_names):
             missed_fields = [field_name for field_name in field_names
                              if field_name not in json]
             if missed_fields:
-                send(f"Missed required fields: {missed_fields}")
+                emit(OutgoingEvents.ERROR, f"Missed required fields: {missed_fields}")
                 return
             else:
                 kwargs.update({field_name: json[field_name]

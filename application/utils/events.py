@@ -11,3 +11,5 @@ class OutgoingEvents:
     SEND_GLOBAL_MESSAGE = "broadcast"
     PRIVATE_MESSAGE_HISTORY = "private history"
     GLOBAL_MESSAGE_HISTORY = "broadcast history"
+    ERROR = "error"
+    UPDATE = "update"
